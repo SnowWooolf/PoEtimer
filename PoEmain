@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сайт с таймером и таблицами</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .tabs {
+            display: flex;
+            background: #f1f1f1;
+            padding: 10px;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #ddd;
+            border: none;
+            margin-right: 5px;
+        }
+        .tab-button.active {
+            background: #555;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <!-- Шапка с таймером -->
+    <div class="header">
+        <h1>До события осталось:</h1>
+        <div class="timer" id="countdown"></div>
+    </div>
+
+    <!-- Навигация по таблицам -->
+    <div class="tabs">
+        <button class="tab-button active" onclick="openTab(event, 'table1')">Таблица 1</button>
+        <button class="tab-button" onclick="openTab(event, 'table2')">Таблица 2</button>
+        <button class="tab-button" onclick="openTab(event, 'table3')">Загрузить Excel</button>
+    </div>
+
+    <!-- Содержимое таблиц -->
+    <div id="table1" class="tab-content active">
+        <h2>Таблица 1</h2>
+        <table>
+            <tr>
+                <th>№</th>
+                <th>Название</th>
+                <th>Значение</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>Пример 1</td>
+                <td>100</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Пример 2</td>
+                <td>200</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="table2" class="tab-content">
+        <h2>Таблица 2</h2>
+        <table>
+            <tr>
+                <th>Дата</th>
+                <th>Событие</th>
+            </tr>
+            <tr>
+                <td>13.06.2025</td>
+                <td>Ключевое событие</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="table3" class="tab-content">
+        <h2>Загрузка Excel</h2>
+        <input type="file" id="excel-upload" accept=".xlsx, .xls">
+        <div id="excel-preview"></div>
+    </div>
+
+    <script>
+        // Таймер обратного отсчёта
+        function updateCountdown() {
+            const targetDate = new Date("2025-06-13T22:00:00").getTime();
+            const now = new Date().getTime();
+            const diff = targetDate - now;
+
+            if (diff <= 0) {
+                document.getElementById("countdown").innerHTML = "Событие наступило!";
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById("countdown").innerHTML = `${days}д ${hours}ч ${minutes}м ${seconds}с`;
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // Переключение вкладок
+        function openTab(evt, tabName) {
+            const tabContents = document.getElementsByClassName("tab-content");
+            const tabButtons = document.getElementsByClassName("tab-button");
+
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove("active");
+                tabButtons[i].classList.remove("active");
+            }
+
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Загрузка Excel (используем SheetJS для простоты)
+        document.getElementById("excel-upload").addEventListener("change", function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: "array" });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const html = XLSX.utils.sheet_to_html(firstSheet);
+                document.getElementById("excel-preview").innerHTML = html;
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
+
+    <!-- Подключаем библиотеку для работы с Excel (SheetJS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>
